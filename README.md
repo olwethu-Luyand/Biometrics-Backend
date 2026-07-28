@@ -1,32 +1,81 @@
-# React + TypeScript + Vite
+# PrimeOak Auth
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Authentication UI built with Vite, React, TypeScript, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## Project Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```
+primeoak-auth/
+├── public/                      # Static assets served as-is
+│   ├── favicon.svg              # Browser tab icon
+│   ├── icons.svg                # SVG icon sprite
+│   └── images/
+│       └── primeoak-logo.svg    # PrimeOak Solutions logo
+│
+├── src/
+│   ├── assets/                  # Imported asset files
+│   │   ├── logo.jpeg            # Company logo (navbar/tab)
+│   │   └── prime_oak.jpeg       # Hero panel background image
+│   │
+│   ├── components/
+│   │   ├── auth/                # Authentication-specific components
+│   │   │   ├── AuthTabs.tsx     # Segmented pill tab (Sign In / Sign Up)
+│   │   │   ├── SignInForm.tsx   # Sign in form with react-hook-form + Zod
+│   │   │   └── SignUpForm.tsx   # Sign up form with 2-column grid layout
+│   │   │
+│   │   ├── common/              # Reusable UI primitives
+│   │   │   ├── Button.tsx       # Styled button (primary/secondary/outline)
+│   │   │   ├── Checkbox.tsx     # Custom checkbox input
+│   │   │   └── Input.tsx        # Label + input + error display
+│   │   │
+│   │   ├── layout/              # Page layout components
+│   │   │   ├── AuthLayout.tsx   # Split grid: hero left, form right
+│   │   │   └── HeroPanel.tsx    # Animated background panel with glows
+│   │   │
+│   │   └── ui/                  # shadcn-style UI components
+│   │       ├── lamp.tsx         # Framer-motion lamp animation container
+│   │       └── demo.tsx         # Lamp demo usage example
+│   │
+│   ├── lib/
+│   │   └── utils.ts             # cn() utility (clsx + tailwind-merge)
+│   │
+│   ├── types/
+│   │   └── auth.ts              # Zod schemas & inferred TypeScript types
+│   │
+│   ├── App.tsx                  # Root app with mode state & dynamic title
+│   ├── index.css                # Tailwind directives
+│   └── main.tsx                 # React DOM mount entry point
+│
+├── index.html                   # HTML entry with root div
+├── tailwind.config.js           # Tailwind config with brand colors
+├── vite.config.ts               # Vite config with @ path alias
+├── tsconfig.json                # TS project references
+├── tsconfig.app.json            # TS config for src/ with path aliases
+└── tsconfig.node.json           # TS config for Node tooling
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Tech Stack
+
+- **Vite** — dev server & bundler
+- **React 19** — UI library
+- **TypeScript 6** — type safety
+- **Tailwind CSS 3** — utility-first styling
+- **react-hook-form** — form state management
+- **Zod** — schema validation
+- **framer-motion** — animations
+
+## Getting Started
+
+```bash
+npm install
+npm run dev
+```
+
+## Scripts
+
+| Command          | Description                  |
+|------------------|------------------------------|
+| `npm run dev`    | Start dev server             |
+| `npm run build`  | TypeScript check + Vite build|
+| `npm run preview`| Preview production build     |
+| `npm run lint`   | Run Oxlint                   |
