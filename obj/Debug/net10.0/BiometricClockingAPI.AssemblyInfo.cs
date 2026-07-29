@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BiometricClockingAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c4389346ea8b1ce223bbb6a970f97da50254a6c2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+659f9e9b2d42eb13855c81d2c1dbc16736f67bd5")]
 [assembly: System.Reflection.AssemblyProductAttribute("BiometricClockingAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BiometricClockingAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
