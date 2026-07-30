@@ -28,3 +28,7 @@ lerna-debug.log*
 *.sln
 *.sw?
 *.local
+# C#/.NET
+bin/
+obj/
+*.user
