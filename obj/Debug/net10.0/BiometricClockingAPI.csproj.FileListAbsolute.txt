@@ -157,3 +157,10 @@ C:\Users\asand\OneDrive\Documents\BiometricClockingSystem\BiometricClockingAPI\o
 C:\Users\asand\OneDrive\Documents\BiometricClockingSystem\BiometricClockingAPI\bin\Debug\net10.0\Npgsql.dll
 C:\Users\asand\OneDrive\Documents\BiometricClockingSystem\BiometricClockingAPI\bin\Debug\net10.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
 C:\Users\asand\OneDrive\Documents\BiometricClockingSystem\BiometricClockingAPI\bin\Debug\net10.0\BCrypt.Net-Next.dll
+C:\Users\asand\OneDrive\Documents\BiometricClockingSystem\BiometricClockingAPI\bin\Debug\net10.0\.oxlintrc.json
+C:\Users\asand\OneDrive\Documents\BiometricClockingSystem\BiometricClockingAPI\bin\Debug\net10.0\package-lock.json
+C:\Users\asand\OneDrive\Documents\BiometricClockingSystem\BiometricClockingAPI\bin\Debug\net10.0\package.json
+C:\Users\asand\OneDrive\Documents\BiometricClockingSystem\BiometricClockingAPI\bin\Debug\net10.0\tsconfig.app.json
+C:\Users\asand\OneDrive\Documents\BiometricClockingSystem\BiometricClockingAPI\bin\Debug\net10.0\tsconfig.json
+C:\Users\asand\OneDrive\Documents\BiometricClockingSystem\BiometricClockingAPI\bin\Debug\net10.0\tsconfig.node.json
+C:\Users\asand\OneDrive\Documents\BiometricClockingSystem\BiometricClockingAPI\obj\Debug\net10.0\BiometricClockingAPI.sourcelink.json
