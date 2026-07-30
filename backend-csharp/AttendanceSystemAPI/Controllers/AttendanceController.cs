@@ -179,8 +179,101 @@ public class AttendanceController : ControllerBase
 
         _context.AttendanceRecords.Remove(record);
         await _context.SaveChangesAsync();
-
         return Ok(new { message = "Attendance record deleted." });
+    }
+
+    // ----- READ: Full attendance overview (Admin/HR/Manager) -----
+    [HttpGet]
+    [Authorize(Roles = "Admin,HR,Manager")]
+    public async Task<IActionResult> List(
+        [FromQuery] string? search,
+        [FromQuery] DateOnly? date,
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20)
+    {
+        var query = _context.AttendanceRecords
+            .Include(a => a.Employee)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(a =>
+                a.Employee.EmployeeCode.Contains(search) ||
+                a.Employee.FullName.Contains(search));
+        }
+
+        if (date.HasValue)
+            query = query.Where(a => a.Date == date.Value);
+
+        var total = await query.CountAsync();
+
+        var records = await query
+            .OrderByDescending(a => a.Date)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .Select(a => new
+            {
+                EmployeeId = a.Employee.EmployeeCode,
+                Date = a.Date,
+                CheckIn = a.ClockIn,
+                CheckOut = a.ClockOut,
+                OvertimeHrs = a.HoursWorked.HasValue && a.HoursWorked.Value > 8
+                    ? Math.Round(a.HoursWorked.Value - 8, 2)
+                    : 0,
+                Status = a.Status
+            })
+            .ToListAsync();
+
+        return Ok(new { attendance = records, total, page, limit });
+    }
+
+    // ----- READ: Attendance by exact Employee Code (e.g. "00003333") -----
+    [HttpGet("by-code/{employeeCode}")]
+
+    [Authorize(Roles = "Admin,HR,Manager")]
+    public async Task<IActionResult> GetByEmployeeCode(
+        string employeeCode,
+        [FromQuery] DateOnly? startDate,
+        [FromQuery] DateOnly? endDate,
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 30)
+    {
+        var employee = await _context.Employees
+            .FirstOrDefaultAsync(e => e.EmployeeCode == employeeCode);
+
+        if (employee == null)
+            return NotFound(new { message = "Employee not found." });
+
+        var query = _context.AttendanceRecords
+            .Where(a => a.EmployeeId == employee.Id);
+
+        if (startDate.HasValue)
+            query = query.Where(a => a.Date >= startDate.Value);
+
+        if (endDate.HasValue)
+            query = query.Where(a => a.Date <= endDate.Value);
+
+        var total = await query.CountAsync();
+
+        var records = await query
+            .OrderByDescending(a => a.Date)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .Select(a => new
+            {
+                EmployeeId = employee.EmployeeCode,
+                EmployeeName = employee.FullName,
+                Date = a.Date,
+                CheckIn = a.ClockIn,
+                CheckOut = a.ClockOut,
+                OvertimeHrs = a.HoursWorked.HasValue && a.HoursWorked.Value > 8
+                    ? Math.Round(a.HoursWorked.Value - 8, 2)
+                    : 0,
+                Status = a.Status
+            })
+            .ToListAsync();
+
+        return Ok(new { attendance = records, total, page, limit });
     }
 }
 
