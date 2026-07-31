@@ -1,0 +1,6 @@
+@PayollModule_HostAddress = http://localhost:5155
+
+GET {{PayollModule_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
