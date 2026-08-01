@@ -1,14 +1,20 @@
-# Dependencies
+# Node / frontend dependencies
 node_modules/
-dist
-dist-ssr
+dist/
+dist-ssr/
 
-# Environment
+# .NET backend build files
+bin/
+obj/
+
+# Environment and local settings
 .env
 .env.local
+*.local
+appsettings.Development.json
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -16,10 +22,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Editor directories and files
-.vscode/*
+# IDE and editor files
+.vscode/
 !.vscode/extensions.json
-.idea
+.idea/
 .vs/
 .DS_Store
 *.suo
@@ -27,4 +33,3 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
-*.local
