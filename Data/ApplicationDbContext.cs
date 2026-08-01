@@ -11,7 +11,6 @@ namespace BiometricClockingAPI.Data
         }
 
         public DbSet<Employee> Employees { get; set; } = null!;
-        public DbSet<Report> Reports { get; set; } = null!;
         public DbSet<Models.PasswordResetToken> PasswordResetTokens { get; set; } = null!;
     }
 }

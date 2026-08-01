@@ -3,9 +3,24 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
+var connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"]
+    ?? builder.Configuration["DefaultConnection"];
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    connectionString = builder.Environment.IsDevelopment()
+        ? "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres"
+        : null;
+}
+
 builder.Services.AddControllers();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString ?? "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres"));
 
 var app = builder.Build();
 
@@ -20,6 +35,7 @@ app.MapGet("/", () => Results.Content(@"<!DOCTYPE html>
     <p>The backend is running. Use the API endpoints below:</p>
     <ul>
         <li><a href=""/api/Employee"">GET /api/Employee</a></li>
+        <li><code>GET /api/Employee/search?id={id}</code></li>
         <li><code>POST /api/Employee</code></li>
         <li><code>PUT /api/Employee/{id}</code></li>
         <li><code>DELETE /api/Employee/{id}</code></li>
@@ -33,7 +49,16 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.EnsureCreated();
+
+    try
+    {
+        dbContext.Database.EnsureCreated();
+        Console.WriteLine("Database initialized successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database startup warning: {ex.Message}");
+    }
 }
 
 app.Run();

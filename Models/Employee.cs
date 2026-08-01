@@ -8,6 +8,5 @@ namespace BiometricClockingAPI.Models
         public string Role { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string EmailAddress { get; set; } = string.Empty;
-        public ICollection<Report> Reports { get; set; } = new List<Report>();
     }
 }

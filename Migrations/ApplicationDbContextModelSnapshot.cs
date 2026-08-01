@@ -83,32 +83,6 @@ namespace BiometricClockingAPI.Migrations
                     b.ToTable("PasswordResetTokens");
                 });
 
-            modelBuilder.Entity("BiometricClockingAPI.Models.Report", b =>
-                {
-                    b.Property<int>("ReportId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ReportId"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("ReportId");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.ToTable("Reports");
-                });
-
             modelBuilder.Entity("BiometricClockingAPI.Models.PasswordResetToken", b =>
                 {
                     b.HasOne("BiometricClockingAPI.Models.Employee", "Employee")
@@ -118,22 +92,6 @@ namespace BiometricClockingAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("BiometricClockingAPI.Models.Report", b =>
-                {
-                    b.HasOne("BiometricClockingAPI.Models.Employee", "Employee")
-                        .WithMany("Reports")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("BiometricClockingAPI.Models.Employee", b =>
-                {
-                    b.Navigation("Reports");
                 });
 #pragma warning restore 612, 618
         }

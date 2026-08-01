@@ -38,6 +38,23 @@ namespace BiometricClockingAPI.Controllers
             return Ok(employees);
         }
 
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchEmployeeByQuery([FromQuery] int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid employee id");
+            }
+
+            var employee = await _context.Employees.FindAsync(id);
+            if (employee == null)
+            {
+                return NotFound("Employee not found");
+            }
+
+            return Ok(employee);
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> SearchEmployee(int id)
         {
