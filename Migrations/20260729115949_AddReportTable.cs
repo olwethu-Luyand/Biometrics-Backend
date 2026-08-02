@@ -12,9 +12,6 @@ namespace BiometricClockingAPI.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Department",
-                table: "Employees");
 
             migrationBuilder.DropColumn(
                 name: "Email",
@@ -113,12 +110,6 @@ namespace BiometricClockingAPI.Migrations
                 table: "Employees",
                 newName: "PhoneNumber");
 
-            migrationBuilder.AddColumn<string>(
-                name: "Department",
-                table: "Employees",
-                type: "text",
-                nullable: false,
-                defaultValue: "");
 
             migrationBuilder.AddColumn<string>(
                 name: "Email",
