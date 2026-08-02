@@ -1,10 +1,10 @@
-namespace AuditModule.DTOs;
+namespace BiometricClockingAPI.DTOs;
 
 public class AuditResponseDto
 {
-    public Guid AuditId { get; set; }
+    public int AuditId { get; set; }
 
-    public Guid EmployeeId { get; set; }
+    public int EmployeeId { get; set; }
 
     public string Location { get; set; } = string.Empty;
 
@@ -15,6 +15,8 @@ public class AuditResponseDto
     public DateTime TimeOut { get; set; }
 
     public DateTime? LogoutTime { get; set; }
+
+    public DateTime LastActivityAt { get; set; }
 
     public string? Message { get; set; }
 }

@@ -15,15 +15,18 @@ public class AuthController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IEmailService _emailService;
-
+    private readonly IAuditService _auditService;
+    
     public AuthController(
-        ApplicationDbContext context,
-        IJwtTokenService jwtTokenService,
-        IEmailService emailService)
+    ApplicationDbContext context,
+    IJwtTokenService jwtTokenService,
+    IEmailService emailService,
+    IAuditService auditService)
     {
         _context = context;
         _jwtTokenService = jwtTokenService;
         _emailService = emailService;
+        _auditService = auditService;
     }
 
     // POST: api/Auth/login
@@ -189,16 +192,28 @@ public class AuthController : ControllerBase
             });
         }
 
+        // Add it here, after OTP validation succeeds.
         otpRecord.Used = true;
         await _context.SaveChangesAsync();
 
         var jwtToken = _jwtTokenService.GenerateToken(employee);
+
+        var auditSession = await _auditService.LoginAsync(
+            new BiometricClockingAPI.DTOs.CreateAuditDto
+            {
+                EmployeeId = employee.EmployeeId,
+                Location = string.IsNullOrWhiteSpace(request.Location)
+                    ? "Office A"
+                    : request.Location.Trim()
+            }
+        );
 
         return Ok(new
         {
             message = "Login successful.",
             token = jwtToken,
             expiresInMinutes = 60,
+
             employee = new
             {
                 employee.EmployeeId,
@@ -206,6 +221,15 @@ public class AuthController : ControllerBase
                 employee.Surname,
                 employee.EmailAddress,
                 employee.Role
+            },
+
+            audit = new
+            {
+                auditSession.AuditId,
+                auditSession.Location,
+                auditSession.Status,
+                auditSession.CreatedAt,
+                auditSession.TimeOut
             }
         });
     }

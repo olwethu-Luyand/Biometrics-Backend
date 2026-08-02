@@ -1,11 +1,13 @@
-using AuditModule.DTOs;
-using AuditModule.Interfaces;
+using BiometricClockingAPI.DTOs;
+using BiometricClockingAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AuditModule.Controllers;
+namespace BiometricClockingAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class AuditController : ControllerBase
 {
     private readonly IAuditService _auditService;
@@ -15,38 +17,75 @@ public class AuditController : ControllerBase
         _auditService = auditService;
     }
 
-    [HttpPost("login")]
-    public async Task<ActionResult<AuditResponseDto>> Login([FromBody] CreateAuditDto dto)
+
+    [HttpPut("location/{employeeId:int}")]
+    public async Task<IActionResult> UpdateLocation(
+        int employeeId,
+        [FromBody] UpdateLocationDto request)
     {
-        var result = await _auditService.LoginAsync(dto);
-        return Ok(result);
+        try
+        {
+            var result = await _auditService
+                .UpdateLocationAsync(
+                    employeeId,
+                    request.Location);
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new
+            {
+                message = exception.Message
+            });
+        }
     }
 
-    [HttpPut("location/{employeeId:guid}")]
-    public async Task<ActionResult<AuditResponseDto>> UpdateLocation(Guid employeeId, [FromBody] UpdateLocationDto dto)
-    {
-        var result = await _auditService.UpdateLocationAsync(employeeId, dto.Location);
-        return Ok(result);
-    }
-
-    [HttpPost("logout/{employeeId:guid}")]
-    public async Task<IActionResult> Logout(Guid employeeId)
+    [HttpPost("logout/{employeeId:int}")]
+    public async Task<IActionResult> Logout(int employeeId)
     {
         await _auditService.LogoutAsync(employeeId);
-        return Ok(new { message = "Logout recorded successfully." });
+
+        return Ok(new
+        {
+            message = "Logout recorded successfully."
+        });
     }
 
-    [HttpGet("check-session/{employeeId:guid}")]
-    public async Task<ActionResult<AuditResponseDto>> CheckSession(Guid employeeId)
+    [HttpGet("check-session/{employeeId:int}")]
+    public async Task<IActionResult> CheckSession(int employeeId)
     {
-        var result = await _auditService.CheckSessionAsync(employeeId);
+        try
+        {
+            var result = await _auditService
+                .CheckSessionAsync(employeeId);
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return NotFound(new
+            {
+                message = exception.Message
+            });
+        }
+    }
+
+    [Authorize(Roles = "HR")]
+    [HttpGet("history/{employeeId:int}")]
+    public async Task<IActionResult> GetHistory(int employeeId)
+    {
+        var result = await _auditService
+            .GetAuditHistoryAsync(employeeId);
+
         return Ok(result);
     }
 
-    [HttpGet("history/{employeeId:guid}")]
-    public async Task<ActionResult<IEnumerable<AuditResponseDto>>> GetHistory(Guid employeeId)
+    [Authorize(Roles = "HR")]
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
     {
-        var result = await _auditService.GetAuditHistoryAsync(employeeId);
+        var result = await _auditService.GetAllAsync();
         return Ok(result);
     }
 }

@@ -1,35 +1,69 @@
-using AuditModule.Data;
-using AuditModule.DTOs;
-using AuditModule.Interfaces;
-using AuditModule.Models;
+using BiometricClockingAPI.Data;
+using BiometricClockingAPI.DTOs;
+using BiometricClockingAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace AuditModule.Services;
+namespace BiometricClockingAPI.Services;
 
 public class AuditService : IAuditService
 {
-    private readonly AuditDbContext _context;
-    private readonly TimeSpan _timeout = TimeSpan.FromMinutes(5);
+    private readonly ApplicationDbContext _context;
+    private readonly TimeSpan _timeout;
     private readonly string _assignedWorkstation;
 
-    public AuditService(AuditDbContext context, IConfiguration configuration)
+    public AuditService(
+        ApplicationDbContext context,
+        IConfiguration configuration)
     {
         _context = context;
-        _assignedWorkstation = configuration["AuditSettings:AssignedWorkstation"] ?? "Office A";
+
+        _assignedWorkstation =
+            configuration["AuditSettings:AssignedWorkstation"]
+            ?? "Office A";
+
+        var timeoutMinutes = int.TryParse(
+            configuration["AuditSettings:TimeoutMinutes"],
+            out var configuredTimeout)
+                ? configuredTimeout
+                : 5;
+
+        _timeout = TimeSpan.FromMinutes(timeoutMinutes);
     }
 
-    public async Task<AuditResponseDto> LoginAsync(CreateAuditDto dto)
+    public async Task<AuditResponseDto> LoginAsync(
+        CreateAuditDto request)
     {
+        var employeeExists = await _context.Employees
+            .AnyAsync(employee =>
+                employee.EmployeeId == request.EmployeeId);
+
+        if (!employeeExists)
+        {
+            throw new KeyNotFoundException("Employee not found.");
+        }
+
         var now = DateTime.UtcNow;
+
+        var currentSession = await GetActiveAuditAsync(
+            request.EmployeeId);
+
+        if (currentSession is not null)
+        {
+            currentSession.LogoutTime = now;
+            currentSession.TimeOut = now;
+            currentSession.LastActivityAt = now;
+        }
+
         var audit = new Audit
         {
-            AuditId = Guid.NewGuid(),
-            EmployeeId = dto.EmployeeId,
-            Location = dto.Location,
-            Status = DetermineStatus(dto.Location, _assignedWorkstation),
+            EmployeeId = request.EmployeeId,
+            Location = request.Location.Trim(),
+            Status = DetermineStatus(
+                request.Location,
+                _assignedWorkstation),
             CreatedAt = now,
-            TimeOut = now.Add(_timeout),
-            LastActivityAt = now
+            LastActivityAt = now,
+            TimeOut = now.Add(_timeout)
         };
 
         _context.Audits.Add(audit);
@@ -38,31 +72,42 @@ public class AuditService : IAuditService
         return MapToResponse(audit);
     }
 
-    public async Task<AuditResponseDto> UpdateLocationAsync(Guid employeeId, string location)
+    public async Task<AuditResponseDto> UpdateLocationAsync(
+        int employeeId,
+        string location)
     {
         var audit = await GetActiveAuditAsync(employeeId);
 
         if (audit is null)
         {
-            throw new InvalidOperationException("No active audit session found for this employee.");
+            throw new InvalidOperationException(
+                "No active audit session found.");
         }
 
         if (IsExpired(audit))
         {
             await ExpireSessionAsync(audit);
-            return MapToResponse(audit, "Session expired. Please login again.");
+
+            return MapToResponse(
+                audit,
+                "Session expired. Please login again.");
         }
 
-        audit.Location = location;
-        audit.Status = DetermineStatus(location, _assignedWorkstation);
-        audit.LastActivityAt = DateTime.UtcNow;
-        audit.TimeOut = DateTime.UtcNow.Add(_timeout);
+        var now = DateTime.UtcNow;
+
+        audit.Location = location.Trim();
+        audit.Status = DetermineStatus(
+            location,
+            _assignedWorkstation);
+        audit.LastActivityAt = now;
+        audit.TimeOut = now.Add(_timeout);
 
         await _context.SaveChangesAsync();
+
         return MapToResponse(audit);
     }
 
-    public async Task LogoutAsync(Guid employeeId)
+    public async Task LogoutAsync(int employeeId)
     {
         var audit = await GetActiveAuditAsync(employeeId);
 
@@ -71,69 +116,110 @@ public class AuditService : IAuditService
             return;
         }
 
-        audit.LogoutTime = DateTime.UtcNow;
-        audit.LastActivityAt = DateTime.UtcNow;
+        var now = DateTime.UtcNow;
+
+        audit.LogoutTime = now;
+        audit.LastActivityAt = now;
+        audit.TimeOut = now;
+
         await _context.SaveChangesAsync();
     }
 
-    public async Task<AuditResponseDto> CheckSessionAsync(Guid employeeId)
+    public async Task<AuditResponseDto> CheckSessionAsync(
+        int employeeId)
     {
         var audit = await GetActiveAuditAsync(employeeId);
 
         if (audit is null)
         {
-            throw new InvalidOperationException("No active audit session found for this employee.");
+            throw new InvalidOperationException(
+                "No active audit session found.");
         }
 
         if (IsExpired(audit))
         {
             await ExpireSessionAsync(audit);
-            return MapToResponse(audit, "Session expired. Please login again.");
+
+            return MapToResponse(
+                audit,
+                "Session expired. Please login again.");
         }
 
         return MapToResponse(audit);
     }
 
-    public async Task<IEnumerable<AuditResponseDto>> GetAuditHistoryAsync(Guid employeeId)
+    public async Task<IEnumerable<AuditResponseDto>>
+        GetAuditHistoryAsync(int employeeId)
     {
         var audits = await _context.Audits
-            .Where(a => a.EmployeeId == employeeId)
-            .OrderByDescending(a => a.CreatedAt)
+            .AsNoTracking()
+            .Where(audit =>
+                audit.EmployeeId == employeeId)
+            .OrderByDescending(audit =>
+                audit.CreatedAt)
             .ToListAsync();
 
-        return audits.Select(a => MapToResponse(a));
+        return audits.Select(MapToResponse);
     }
 
-    private async Task<Audit?> GetActiveAuditAsync(Guid employeeId)
+    public async Task<IEnumerable<AuditResponseDto>> GetAllAsync()
+    {
+        var audits = await _context.Audits
+            .AsNoTracking()
+            .OrderByDescending(audit =>
+                audit.CreatedAt)
+            .ToListAsync();
+
+        return audits.Select(MapToResponse);
+    }
+
+    private async Task<Audit?> GetActiveAuditAsync(
+        int employeeId)
     {
         return await _context.Audits
-            .Where(a => a.EmployeeId == employeeId && a.LogoutTime == null)
-            .OrderByDescending(a => a.CreatedAt)
+            .Where(audit =>
+                audit.EmployeeId == employeeId &&
+                audit.LogoutTime == null)
+            .OrderByDescending(audit =>
+                audit.CreatedAt)
             .FirstOrDefaultAsync();
     }
 
     private bool IsExpired(Audit audit)
     {
-        return DateTime.UtcNow - audit.LastActivityAt > _timeout;
+        return DateTime.UtcNow - audit.LastActivityAt >
+               _timeout;
     }
 
     private async Task ExpireSessionAsync(Audit audit)
     {
-        audit.TimeOut = DateTime.UtcNow;
-        audit.LogoutTime = DateTime.UtcNow;
+        var now = DateTime.UtcNow;
+
+        audit.TimeOut = now;
+        audit.LogoutTime = now;
+        audit.LastActivityAt = now;
+
         await _context.SaveChangesAsync();
     }
 
-    private static string DetermineStatus(string location, string assignedWorkstation)
+    private static string DetermineStatus(
+        string location,
+        string assignedWorkstation)
     {
-        return string.IsNullOrWhiteSpace(location)
-            ? "Not at workstation"
-            : location.Equals(assignedWorkstation, StringComparison.OrdinalIgnoreCase)
+        if (string.IsNullOrWhiteSpace(location))
+        {
+            return "Not at workstation";
+        }
+
+        return location.Equals(
+            assignedWorkstation,
+            StringComparison.OrdinalIgnoreCase)
                 ? "Present at workstation"
                 : "Not at workstation";
     }
 
-    private static AuditResponseDto MapToResponse(Audit audit, string? message = null)
+    private static AuditResponseDto MapToResponse(
+        Audit audit)
     {
         return new AuditResponseDto
         {
@@ -144,7 +230,17 @@ public class AuditService : IAuditService
             CreatedAt = audit.CreatedAt,
             TimeOut = audit.TimeOut,
             LogoutTime = audit.LogoutTime,
-            Message = message
+            LastActivityAt = audit.LastActivityAt
         };
     }
+
+    private static AuditResponseDto MapToResponse(
+        Audit audit,
+        string message)
+    {
+        var response = MapToResponse(audit);
+        response.Message = message;
+        return response;
+    }
+
 }

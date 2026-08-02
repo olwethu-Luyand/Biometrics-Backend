@@ -1,4 +1,4 @@
-using BiometricClockingAPI.DTOs.Audit;
+using BiometricClockingAPI.DTOs;
 
 namespace BiometricClockingAPI.Services;
 
@@ -16,4 +16,6 @@ public interface IAuditService
 
     Task<IEnumerable<AuditResponseDto>> GetAuditHistoryAsync(
         int employeeId);
+
+    Task<IEnumerable<AuditResponseDto>> GetAllAsync();
 }

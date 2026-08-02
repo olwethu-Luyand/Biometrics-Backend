@@ -11,4 +11,6 @@ public class VerifyLoginOtpDto
     [Required]
     [RegularExpression(@"^\d{6}$")]
     public string Otp { get; set; } = string.Empty;
+
+    public string Location { get; set; } = "Office A";
 }

@@ -84,6 +84,7 @@ builder.Services
             };
     });
 
+builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddAuthorization();
 
 // ---------------------------------------------------------
