@@ -15,4 +15,6 @@ public interface IAttendanceService
     Task<List<AttendanceRecord>> GetTodayAllAsync();
 
     Task<List<AttendanceRecord>> GetAllHistoryAsync();
+
+    Task<int> MarkAbsentEmployeesAsync(DateOnly attendanceDate);
 }

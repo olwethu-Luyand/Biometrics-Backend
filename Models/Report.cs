@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BiometricClockingAPI.Models
 {
@@ -14,10 +13,12 @@ namespace BiometricClockingAPI.Models
         [Required]
         public int EmployeeId { get; set; }
 
-        [ForeignKey("EmployeeId")]
-        public Employee? Employee { get; set; }
-
         [Required]
         public string Description { get; set; } = string.Empty;
+
+        [Required]
+        public string Status { get; set; } = "Open";
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

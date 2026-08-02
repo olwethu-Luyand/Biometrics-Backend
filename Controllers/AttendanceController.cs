@@ -242,4 +242,30 @@ public class AttendanceController : ControllerBase
 
         return Ok(response);
     }
+
+    [Authorize(Roles = "HR")]
+    [HttpPost("mark-absent")]
+    public async Task<IActionResult> MarkAbsentEmployees(
+        [FromQuery] DateOnly attendanceDate)
+    {
+        if (attendanceDate > DateOnly.FromDateTime(DateTime.UtcNow))
+        {
+            return BadRequest(new
+            {
+                message = "You cannot mark attendance for a future date."
+            });
+        }
+
+        var absentCount = await _attendanceService
+            .MarkAbsentEmployeesAsync(attendanceDate);
+
+        return Ok(new
+        {
+            message = absentCount == 0
+                ? "No employees were marked absent."
+                : $"{absentCount} employee(s) marked absent.",
+            attendanceDate,
+            absentCount
+        });
+    }
 }

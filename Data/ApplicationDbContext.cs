@@ -18,6 +18,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
     public DbSet<Audit> Audits => Set<Audit>();
 
+    public DbSet<Payroll> Payrolls => Set<Payroll>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -69,6 +71,49 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(audit => audit.EmployeeId);
             entity.HasIndex(audit => audit.CreatedAt);
+        });
+
+        modelBuilder.Entity<Payroll>(entity =>
+        {
+            entity.ToTable("Payrolls");
+
+            entity.HasKey(payroll => payroll.PayrollId);
+
+            entity.HasOne(payroll => payroll.Employee)
+                .WithMany()
+                .HasForeignKey(payroll => payroll.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(payroll => payroll.EmployeeId);
+
+            entity.HasIndex(payroll => new
+            {
+                payroll.EmployeeId,
+                payroll.PayStart,
+                payroll.PayEnd
+            })
+            .IsUnique();
+
+            entity.Property(payroll => payroll.HourlyRate)
+                .HasPrecision(12, 2);
+
+            entity.Property(payroll => payroll.OvertimeRate)
+                .HasPrecision(12, 2);
+
+            entity.Property(payroll => payroll.RegularPay)
+                .HasPrecision(12, 2);
+
+            entity.Property(payroll => payroll.OvertimePay)
+                .HasPrecision(12, 2);
+
+            entity.Property(payroll => payroll.Deductions)
+                .HasPrecision(12, 2);
+
+            entity.Property(payroll => payroll.GrossPay)
+                .HasPrecision(12, 2);
+
+            entity.Property(payroll => payroll.NetPay)
+                .HasPrecision(12, 2);
         });
     }
 }

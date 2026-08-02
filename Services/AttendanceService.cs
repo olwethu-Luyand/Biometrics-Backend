@@ -143,4 +143,52 @@ public class AttendanceService : IAttendanceService
             .ThenBy(record => record.Employee.Name)
             .ToListAsync();
     }
+
+    public async Task<int> MarkAbsentEmployeesAsync(
+    DateOnly attendanceDate)
+    {
+        var employeeIds = await _context.Employees
+            .AsNoTracking()
+            .Where(employee => employee.Role == "Employee")
+            .Select(employee => employee.EmployeeId)
+            .ToListAsync();
+
+        var employeesWithAttendance = await _context.AttendanceRecords
+            .AsNoTracking()
+            .Where(record =>
+                record.AttendanceDate == attendanceDate)
+            .Select(record => record.EmployeeId)
+            .ToListAsync();
+
+        var absentEmployeeIds = employeeIds
+            .Except(employeesWithAttendance)
+            .ToList();
+
+        if (absentEmployeeIds.Count == 0)
+        {
+            return 0;
+        }
+
+        var now = DateTime.UtcNow;
+
+        var absentRecords = absentEmployeeIds
+            .Select(employeeId => new AttendanceRecord
+            {
+                EmployeeId = employeeId,
+                AttendanceDate = attendanceDate,
+                ClockInTime = null,
+                ClockOutTime = null,
+                TotalWorkedHours = 0,
+                OvertimeHours = 0,
+                Status = "Absent",
+                CreatedAt = now,
+                UpdatedAt = now
+            })
+            .ToList();
+
+        _context.AttendanceRecords.AddRange(absentRecords);
+        await _context.SaveChangesAsync();
+
+        return absentRecords.Count;
+    }
 }

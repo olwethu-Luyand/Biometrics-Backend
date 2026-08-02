@@ -158,6 +158,8 @@ builder.Services.AddSwaggerGen(options =>
     );
 });
 
+builder.Services.AddScoped<IPayrollService, PayrollService>();
+
 var app = builder.Build();
 
 // ---------------------------------------------------------
